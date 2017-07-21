@@ -26,6 +26,8 @@ namespace SimpleDemo.A
             var endpoint = await Endpoint.Start(endpointConfiguration);
 
             await endpoint.SendLocal(new DemoCommand());
+
+            Console.WriteLine("Message sent. Press any key to exit.");
             Console.ReadKey();
         }
     }
