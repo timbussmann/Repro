@@ -13,8 +13,4 @@
     <PackageReference Include="NServiceBus" Version="7.0.0-alpharelease0026" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\SimpleDemo.Messages\SimpleDemo.Messages.csproj" />
-  </ItemGroup>
-
 </Project>

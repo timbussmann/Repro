@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Configuration;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using NServiceBus;
 using NServiceBus.Logging;
@@ -12,19 +14,20 @@ namespace SimpleDemo.A
 {
     class Program
     {
-        static void Main(string[] args)
+        // When started within VisualStudi, the application crashes immediately on Endpoint.Start
+        // When started via dotnet run, the application crashes when sending a message
+        static async Task Main(string[] args)
         {
-            MainAsync().GetAwaiter().GetResult();
-        }
+            // Setting the culture to en-US resolves the issue
+//            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+//            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
-        static async Task MainAsync()
-        {
-            LogManager.Use<DefaultFactory>().Level(LogLevel.Debug);
-
-            //uncomment these lines to resolve 'Infinite recursion during resource lookup within System.Private.CoreLib' issues:
-            //var serializer = new DataContractJsonSerializer(typeof(string));
-            //var memoryStream = new MemoryStream();
-            //serializer.WriteObject(memoryStream, "test");
+            // This is the code in NServiceBus.Core triggering the exception. 
+            // Calling this code here makes the exception to go away
+            // but if FirstChanceExceptions are enabled, I notice FileLoadException when trying to load System.Private.CoreLib
+//            var serializer = new DataContractJsonSerializer(typeof(string));
+//            var memoryStream = new MemoryStream();
+//            serializer.WriteObject(memoryStream, "test");
 
             var endpointConfiguration = new EndpointConfiguration("SimpleDemo.A");
             var transport = endpointConfiguration.UseTransport<LearningTransport>();
@@ -40,7 +43,9 @@ namespace SimpleDemo.A
                     case ConsoleKey.Escape:
                         return;
                     default:
-                        await endpoint.Send(new DemoCommand());
+                        var sendOptions = new SendOptions();
+                        sendOptions.RouteToThisEndpoint();
+                        await endpoint.Send(new DemoCommand(), sendOptions);
                         Console.WriteLine("message sent");
                         break;
                 }
